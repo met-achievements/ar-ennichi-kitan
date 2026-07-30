@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11162b">
+  <title>AR縁日奇譚 ― 消えた祭札を探せ ―</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true"><span class="fireflies"></span></div>
+  <main class="app-shell">
+    <header class="site-header">
+      <p class="eyebrow">大阪経済大学・大樟祭</p>
+      <h1>AR縁日奇譚</h1>
+      <p class="subtitle">消えた祭札を探せ</p>
+    </header>
+
+    <div class="progress-wrap" aria-label="進行状況">
+      <div id="progressText" class="progress-text">祭札 0 / 4</div>
+      <div id="progressDots" class="progress-dots"></div>
+    </div>
+
+    <section id="introScreen" class="screen panel">
+      <p class="chapter">序章</p>
+      <h2>夏の終わり、縁日が消えた。</h2>
+      <p>学園祭の前夜、幻の縁日を支える四枚の「祭札」が、キャンパスのどこかへ散らばってしまった。</p>
+      <p>現地に残された景色を確かめ、四つの問いに答えてほしい。祭札をすべて集めた者だけが、縁日を復活させられる。</p>
+      <div class="notice"><strong>遊び方</strong><span>画面に表示された場所へ移動し、現地を見て答えを選んでください。</span></div>
+      <button id="startButton" class="primary-button" type="button">探索を始める</button>
+    </section>
+
+    <section id="questionScreen" class="screen panel" hidden>
+      <p id="stageLabel" class="chapter"></p>
+      <h2 id="destination"></h2>
+      <p id="stageStory" class="stage-story"></p>
+      <figure id="photoFrame" class="photo-frame" hidden>
+        <img id="stageImage" src="" alt="">
+        <figcaption>現地写真</figcaption>
+      </figure>
+      <div class="question-box">
+        <p id="questionText" class="question-text"></p>
+        <div id="choices" class="choices"></div>
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="rewardScreen" class="screen panel reward-panel" hidden>
+      <p class="chapter">祭札を発見</p>
+      <div id="earnedLetter" class="earned-letter"></div>
+      <h2 id="rewardTitle"></h2>
+      <p id="rewardMessage"></p>
+      <button id="nextButton" class="primary-button" type="button">次の記憶を探す</button>
+    </section>
+
+    <section id="finalScreen" class="screen panel" hidden>
+      <p class="chapter">終章</p>
+      <h2>四枚の祭札を並べよ</h2>
+      <p>集めた文字を、見つけた順番に入力してください。</p>
+      <div id="collectedLetters" class="collected-letters"></div>
+      <label class="input-label" for="finalAnswer">最後の言葉</label>
+      <input id="finalAnswer" class="text-input" type="text" autocomplete="off" maxlength="4" placeholder="ひらがな4文字">
+      <button id="finalButton" class="primary-button" type="button">祭札を捧げる</button>
+      <p id="finalFeedback" class="feedback" aria-live="polite"></p>
+    </section>
+
+    <section id="clearScreen" class="screen panel clear-panel" hidden>
+      <p class="chapter">縁日復活</p>
+      <div class="trophy-placeholder">🏆</div>
+      <h2>幻の縁日は、まだ消えていなかった。</h2>
+      <p>四枚の祭札がそろい、夏の終わりの灯りが再びともった。あなたは「AR縁日奇譚」の探索達成者です。</p>
+      <div class="result-actions">
+        <button class="secondary-button" type="button" disabled>ARトロフィー（準備中）</button>
+        <a class="secondary-button disabled-link" aria-disabled="true">記念NFT（準備中）</a>
+      </div>
+      <p class="small-note">3DモデルとNFT受取先が完成したら、ボタンを有効化します。</p>
+      <button id="resetButton" class="text-button" type="button">最初からやり直す</button>
+    </section>
+
+    <footer>歩きながらのスマートフォン操作はせず、安全な場所で立ち止まってご利用ください。</footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
