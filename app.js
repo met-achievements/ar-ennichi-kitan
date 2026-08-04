@@ -1,4 +1,4 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV2";
+const STORAGE_KEY = "arEnnichiKitanProgressV4";
 
 const questions = [
   {
@@ -24,26 +24,21 @@ const questions = [
     imageAlt: "図書館正面入口の現地写真"
   },
   {
-    type: "quiz",
-    destination: "正門へ向かえ",
-    story: "大学の名を示す看板を見つけ、刻まれた文字を確かめよ。",
-    question: "看板に書かれている大阪経済大学の英語名は？",
-    choices: [
-      "Osaka University of Economy",
-      "Osaka University of Economics",
-      "Osaka Economics University",
-      "Osaka University of Business"
-    ],
-    answerIndex: 1,
+    type: "ar",
+    destination: "G館の前へ向かえ",
+    story: "G館の前に立つ謎のオブジェクトに、三つ目の祭札が隠されている。",
+    question: "G館の前にある謎のオブジェクトをカメラに映そう！",
     letter: "こ",
-    image: "",
-    imageAlt: "正門の英語看板"
+    image: "./assets/images/g-object.jpg",
+    imageAlt: "G館前の謎のオブジェクト",
+    arPage: "./g-object-ar.html",
+    arFlag: "g-object-ar-success"
   },
   {
     type: "ar",
     destination: "C館の入口へ向かえ",
     story: "最後の祭札は、C-Centerの看板に眠っている。カメラでその記憶を呼び起こせ。",
-    question: "C-Centerの看板にカメラを向けると、最後の祭札が現れます。",
+    question: "C館（C-Center）の看板をカメラに写してください。",
     letter: "う",
     image: "./assets/images/c-center.jpg",
     imageAlt: "C-Centerの看板",
@@ -80,12 +75,7 @@ const finalFeedback = document.getElementById("finalFeedback");
 let state = loadState();
 
 function defaultState() {
-  return {
-    started: false,
-    step: 0,
-    letters: [],
-    cleared: false
-  };
+  return { started: false, step: 0, letters: [], cleared: false };
 }
 
 function loadState() {
@@ -152,11 +142,11 @@ function renderQuestion() {
       button.addEventListener("click", () => checkAnswer(index));
       choices.appendChild(button);
     });
-  } else if (current.type === "ar") {
+  } else {
     const launch = document.createElement("a");
     launch.className = "primary-button inline-link-button";
     launch.href = current.arPage;
-    launch.textContent = "C館ARを起動する";
+    launch.textContent = current.destination.includes("G館") ? "G館ARを起動する" : "C館ARを起動する";
     launch.target = "_blank";
     launch.rel = "noopener noreferrer";
 
@@ -168,7 +158,9 @@ function renderQuestion() {
 
     const help = document.createElement("p");
     help.className = "small-note left-note";
-    help.textContent = "コツ：看板全体と、まわりのレンガが画面に入るようにすると認識しやすいです。";
+    help.textContent = current.destination.includes("G館")
+      ? "コツ：オブジェクトと台座が画面の中央に入るよう、正面からゆっくり近づいてください。"
+      : "コツ：看板全体と、まわりのレンガが少し入るようにすると認識しやすいです。";
 
     choices.appendChild(launch);
     choices.appendChild(verify);
@@ -180,15 +172,12 @@ function renderQuestion() {
 }
 
 function verifyArStage(current) {
-  const found = localStorage.getItem(current.arFlag) === "true";
-  if (!found) {
-    feedback.textContent = "まだ祭札が見つかっていないようだ。ARページでC-Centerを認識してみよう。";
+  if (localStorage.getItem(current.arFlag) !== "true") {
+    feedback.textContent = "まだ祭札が見つかっていないようだ。ARページで対象を認識してみよう。";
     return;
   }
 
-  if (!state.letters.includes(current.letter)) {
-    state.letters.push(current.letter);
-  }
+  if (!state.letters.includes(current.letter)) state.letters.push(current.letter);
   saveState();
   renderReward(current);
 }
@@ -202,13 +191,8 @@ function checkAnswer(selectedIndex) {
     return;
   }
 
-  buttons.forEach(button => {
-    button.disabled = true;
-  });
-
-  if (!state.letters.includes(current.letter)) {
-    state.letters.push(current.letter);
-  }
+  buttons.forEach(button => { button.disabled = true; });
+  if (!state.letters.includes(current.letter)) state.letters.push(current.letter);
   saveState();
   renderReward(current);
 }
@@ -216,14 +200,12 @@ function checkAnswer(selectedIndex) {
 function renderReward(question) {
   earnedLetter.textContent = question.letter;
   rewardTitle.textContent = `祭札「${question.letter}」を取り戻した`;
-  rewardMessage.textContent =
-    state.step === questions.length - 1
-      ? "四枚の祭札がそろった。最後の言葉を完成させよう。"
-      : "遠くで祭囃子が聞こえた気がした。次の場所へ向かおう。";
-
-  document.getElementById("nextButton").textContent =
-    state.step === questions.length - 1 ? "最後の言葉を完成させる" : "次の記憶を探す";
-
+  rewardMessage.textContent = state.step === questions.length - 1
+    ? "四枚の祭札がそろった。最後の言葉を完成させよう。"
+    : "遠くで祭囃子が聞こえた気がした。次の場所へ向かおう。";
+  document.getElementById("nextButton").textContent = state.step === questions.length - 1
+    ? "最後の言葉を完成させる"
+    : "次の記憶を探す";
   showScreen("reward");
   renderProgress();
 }
@@ -231,12 +213,7 @@ function renderReward(question) {
 function goNext() {
   state.step += 1;
   saveState();
-
-  if (state.step >= questions.length) {
-    renderFinal();
-  } else {
-    renderQuestion();
-  }
+  state.step >= questions.length ? renderFinal() : renderQuestion();
 }
 
 function renderFinal() {
@@ -261,18 +238,16 @@ function checkFinal() {
     finalFeedback.textContent = "祭札の順番が違うようだ。集めた順に読んでみよう。";
     return;
   }
-
   state.cleared = true;
   saveState();
   showScreen("clear");
 }
 
 function resetGame() {
-  const confirmed = window.confirm("進行状況を消して、最初から始めますか？");
-  if (!confirmed) return;
-
+  if (!window.confirm("進行状況を消して、最初から始めますか？")) return;
   state = defaultState();
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("g-object-ar-success");
   localStorage.removeItem("c-center-ar-success");
   renderProgress();
   showScreen("intro");
@@ -283,23 +258,15 @@ document.getElementById("startButton").addEventListener("click", () => {
   saveState();
   renderQuestion();
 });
-
 document.getElementById("nextButton").addEventListener("click", goNext);
 document.getElementById("finalButton").addEventListener("click", checkFinal);
 document.getElementById("resetButton").addEventListener("click", resetGame);
-
 finalAnswer.addEventListener("keydown", event => {
   if (event.key === "Enter") checkFinal();
 });
 
 renderProgress();
-
-if (state.cleared) {
-  showScreen("clear");
-} else if (state.started && state.step >= questions.length) {
-  renderFinal();
-} else if (state.started) {
-  renderQuestion();
-} else {
-  showScreen("intro");
-}
+if (state.cleared) showScreen("clear");
+else if (state.started && state.step >= questions.length) renderFinal();
+else if (state.started) renderQuestion();
+else showScreen("intro");
