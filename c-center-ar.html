@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>C館AR | 最後の祭札</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body class="ar-page">
+  <div class="ar-hud">
+    <div class="ar-card">
+      <h1>最後の祭札を探せ</h1>
+      <p>C館の「C-Center」看板を、真正面から写してください。看板全体と、まわりのレンガを少し入れると認識しやすいです。</p>
+    </div>
+  </div>
+
+  <div class="ar-tip" id="arTip">C-Centerをカメラに映してください…</div>
+
+  <div class="ar-overlay" id="resultOverlay" aria-live="polite">
+    <div class="ar-result">
+      <img src="./assets/ui/festival-card-u.svg" alt="祭札 う">
+      <h2>祭札「う」を発見した！</h2>
+      <p>縁日の記憶がひとつ、よみがえった。下のボタンから本編に戻ってください。</p>
+      <a class="ar-button" href="./index.html">本編に戻る</a>
+    </div>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets/c-center.mind; autoStart: true; maxTrack: 1; uiScanning: true; uiLoading: true;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded>
+
+    <a-assets>
+      <img id="festivalCard" src="./assets/ui/festival-card-u.svg" alt="祭札 う">
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-plane
+        src="#festivalCard"
+        position="0 0.45 0"
+        height="0.65"
+        width="0.5"
+        transparent="true"
+        animation="property: position; to: 0 0.55 0; dir: alternate; loop: true; dur: 1400; easing: easeInOutSine">
+      </a-plane>
+      <a-ring color="#d7a84a" radius-inner="0.28" radius-outer="0.31" position="0 0 0"></a-ring>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const target = document.querySelector('#target');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const arTip = document.getElementById('arTip');
+    let found = false;
+
+    target.addEventListener('targetFound', () => {
+      if (found) return;
+      found = true;
+      localStorage.setItem('c-center-ar-success', 'true');
+      resultOverlay.classList.add('is-visible');
+      arTip.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
