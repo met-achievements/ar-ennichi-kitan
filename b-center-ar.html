@@ -61,15 +61,15 @@
     .read-time {
       position: fixed;
       left: 50%;
-      top: 56%;
+      bottom: max(20px, env(safe-area-inset-bottom));
       z-index: 45;
       display: none;
-      width: min(calc(100% - 36px), 420px);
-      transform: translate(-50%, -50%);
-      padding: 20px 18px;
+      width: min(calc(100% - 28px), 430px);
+      transform: translateX(-50%);
+      padding: 18px;
       border-radius: 16px;
       color: #fff8e8;
-      background: rgba(26, 12, 20, 0.84);
+      background: rgba(26, 12, 20, 0.90);
       text-align: center;
       backdrop-filter: blur(8px);
     }
@@ -78,14 +78,26 @@
 
     .read-time strong {
       display: block;
-      margin-bottom: 8px;
-      font-size: 1.45rem;
+      margin-bottom: 7px;
+      font-size: 1.5rem;
     }
 
     .read-time span {
       display: block;
+      margin-bottom: 13px;
       font-size: .9rem;
-      opacity: .86;
+      opacity: .9;
+    }
+
+    .read-time button {
+      width: 100%;
+      padding: 13px 16px;
+      color: #fff8e8;
+      background: linear-gradient(180deg, #aa3b41, #7e222b);
+      border: 1px solid #681a22;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
     }
 
     .solve-overlay {
@@ -337,8 +349,9 @@
   </div>
 
   <div class="read-time" id="readTime" aria-live="polite">
-    <strong>「きおく」</strong>
-    <span>文字をよく確認してください…</span>
+    <strong>何と読める？</strong>
+    <span>完成した模型をよく見て、読めたらボタンを押してください。</span>
+    <button id="confirmKeywordButton" type="button">「きおく」と読めた！</button>
   </div>
 
   <div class="debug-angle" id="debugAngle"></div>
@@ -348,7 +361,7 @@
       <div class="festival-ticket" aria-label="祭札 い">い</div>
       <h2>記憶の形が重なった！</h2>
       <p>「きおく」の文字が現れ、二つ目の祭札「い」を発見した。</p>
-      <a href="./index.html?v=6">本編に戻る</a>
+      <a href="./index.html?v=7">本編に戻る</a>
     </div>
   </div>
 
@@ -399,6 +412,7 @@
     const readTime = document.getElementById("readTime");
     const solveOverlay = document.getElementById("solveOverlay");
     const lockRing = document.getElementById("lockRing");
+    const confirmKeywordButton = document.getElementById("confirmKeywordButton");
     const debugAngle = document.getElementById("debugAngle");
 
     rotator.setAttribute("drag-rotate-snap", {
@@ -429,7 +443,6 @@
     });
 
     rotator.addEventListener("angle-solved", () => {
-      localStorage.setItem("b-center-ar-success", "true");
       guide.hidden = true;
       lockRing.setAttribute("visible", "true");
       readTime.classList.add("is-visible");
@@ -437,12 +450,16 @@
       if (navigator.vibrate) {
         navigator.vibrate([60, 40, 90]);
       }
+    });
 
-      // 3.2秒は「きおく」の完成形を見せてから祭札を表示
-      window.setTimeout(() => {
-        readTime.classList.remove("is-visible");
-        solveOverlay.classList.add("is-visible");
-      }, 3200);
+    confirmKeywordButton.addEventListener("click", () => {
+      localStorage.setItem("b-center-ar-success", "true");
+      readTime.classList.remove("is-visible");
+      solveOverlay.classList.add("is-visible");
+
+      if (navigator.vibrate) {
+        navigator.vibrate(80);
+      }
     });
   </script>
 </body>
