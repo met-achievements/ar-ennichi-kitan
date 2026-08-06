@@ -1,4 +1,4 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV4";
+const STORAGE_KEY = "arEnnichiKitanProgressV6";
 
 const questions = [
   {
@@ -13,15 +13,17 @@ const questions = [
     imageAlt: "D館の現地写真"
   },
   {
-    type: "quiz",
-    destination: "図書館の正面入口へ向かえ",
-    story: "本の眠る場所の前に、次の記憶が残されている。",
-    question: "図書館の正面入口を出て、すぐ目の前にあるものは？",
-    choices: ["駐車場", "駐輪場", "かみしんプラザ", "A館"],
-    answerIndex: 1,
+    type: "ar",
+    destination: "B館の入口へ向かえ",
+    story: "二つ目の祭札は、B-Centerの看板に封じられた立体の記憶に隠されている。",
+    question: "B-Centerの看板をカメラに映し、現れた模型を指で回して「きおく」の形を完成させよう。",
     letter: "い",
-    image: "",
-    imageAlt: "図書館正面入口の現地写真"
+    image: "./assets/images/b-center.jpg",
+    imageAlt: "B-Centerの看板",
+    arPage: "./b-center-ar.html?v=2",
+    arFlag: "b-center-ar-success",
+    launchLabel: "B館ARを起動する",
+    help: "看板を画面に入れたまま模型を左右にスワイプし、「きおく」と読める角度を探してください。"
   },
   {
     type: "ar",
@@ -32,7 +34,9 @@ const questions = [
     image: "./assets/images/g-object.jpg",
     imageAlt: "G館前の謎のオブジェクト",
     arPage: "./g-object-ar.html",
-    arFlag: "g-object-ar-success"
+    arFlag: "g-object-ar-success",
+    launchLabel: "G館ARを起動する",
+    help: "オブジェクトと台座が画面の中央に入るよう、正面からゆっくり近づいてください。"
   },
   {
     type: "ar",
@@ -43,7 +47,9 @@ const questions = [
     image: "./assets/images/c-center.jpg",
     imageAlt: "C-Centerの看板",
     arPage: "./c-center-ar.html",
-    arFlag: "c-center-ar-success"
+    arFlag: "c-center-ar-success",
+    launchLabel: "C館ARを起動する",
+    help: "看板全体と、まわりのレンガが少し入るようにすると認識しやすいです。"
   }
 ];
 
@@ -146,21 +152,19 @@ function renderQuestion() {
     const launch = document.createElement("a");
     launch.className = "primary-button inline-link-button";
     launch.href = current.arPage;
-    launch.textContent = current.destination.includes("G館") ? "G館ARを起動する" : "C館ARを起動する";
+    launch.textContent = current.launchLabel || "ARを起動する";
     launch.target = "_blank";
     launch.rel = "noopener noreferrer";
 
     const verify = document.createElement("button");
     verify.type = "button";
     verify.className = "secondary-button verify-button";
-    verify.textContent = "認識できたらここを押す";
+    verify.textContent = "祭札を発見したらここを押す";
     verify.addEventListener("click", () => verifyArStage(current));
 
     const help = document.createElement("p");
     help.className = "small-note left-note";
-    help.textContent = current.destination.includes("G館")
-      ? "コツ：オブジェクトと台座が画面の中央に入るよう、正面からゆっくり近づいてください。"
-      : "コツ：看板全体と、まわりのレンガが少し入るようにすると認識しやすいです。";
+    help.textContent = current.help || "対象を画面の中央に入れてください。";
 
     choices.appendChild(launch);
     choices.appendChild(verify);
@@ -173,11 +177,13 @@ function renderQuestion() {
 
 function verifyArStage(current) {
   if (localStorage.getItem(current.arFlag) !== "true") {
-    feedback.textContent = "まだ祭札が見つかっていないようだ。ARページで対象を認識してみよう。";
+    feedback.textContent = "まだ祭札が見つかっていないようだ。ARページで謎を解いてみよう。";
     return;
   }
 
-  if (!state.letters.includes(current.letter)) state.letters.push(current.letter);
+  if (!state.letters.includes(current.letter)) {
+    state.letters.push(current.letter);
+  }
   saveState();
   renderReward(current);
 }
@@ -191,8 +197,13 @@ function checkAnswer(selectedIndex) {
     return;
   }
 
-  buttons.forEach(button => { button.disabled = true; });
-  if (!state.letters.includes(current.letter)) state.letters.push(current.letter);
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+
+  if (!state.letters.includes(current.letter)) {
+    state.letters.push(current.letter);
+  }
   saveState();
   renderReward(current);
 }
@@ -200,12 +211,16 @@ function checkAnswer(selectedIndex) {
 function renderReward(question) {
   earnedLetter.textContent = question.letter;
   rewardTitle.textContent = `祭札「${question.letter}」を取り戻した`;
-  rewardMessage.textContent = state.step === questions.length - 1
-    ? "四枚の祭札がそろった。最後の言葉を完成させよう。"
-    : "遠くで祭囃子が聞こえた気がした。次の場所へ向かおう。";
-  document.getElementById("nextButton").textContent = state.step === questions.length - 1
-    ? "最後の言葉を完成させる"
-    : "次の記憶を探す";
+  rewardMessage.textContent =
+    state.step === questions.length - 1
+      ? "四枚の祭札がそろった。最後の言葉を完成させよう。"
+      : "遠くで祭囃子が聞こえた気がした。次の場所へ向かおう。";
+
+  document.getElementById("nextButton").textContent =
+    state.step === questions.length - 1
+      ? "最後の言葉を完成させる"
+      : "次の記憶を探す";
+
   showScreen("reward");
   renderProgress();
 }
@@ -218,11 +233,13 @@ function goNext() {
 
 function renderFinal() {
   collectedLetters.replaceChildren();
+
   state.letters.forEach(letter => {
     const tile = document.createElement("span");
     tile.textContent = letter;
     collectedLetters.appendChild(tile);
   });
+
   finalFeedback.textContent = "";
   finalAnswer.value = "";
   showScreen("final");
@@ -238,6 +255,7 @@ function checkFinal() {
     finalFeedback.textContent = "祭札の順番が違うようだ。集めた順に読んでみよう。";
     return;
   }
+
   state.cleared = true;
   saveState();
   showScreen("clear");
@@ -245,8 +263,10 @@ function checkFinal() {
 
 function resetGame() {
   if (!window.confirm("進行状況を消して、最初から始めますか？")) return;
+
   state = defaultState();
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("b-center-ar-success");
   localStorage.removeItem("g-object-ar-success");
   localStorage.removeItem("c-center-ar-success");
   renderProgress();
@@ -258,14 +278,17 @@ document.getElementById("startButton").addEventListener("click", () => {
   saveState();
   renderQuestion();
 });
+
 document.getElementById("nextButton").addEventListener("click", goNext);
 document.getElementById("finalButton").addEventListener("click", checkFinal);
 document.getElementById("resetButton").addEventListener("click", resetGame);
+
 finalAnswer.addEventListener("keydown", event => {
   if (event.key === "Enter") checkFinal();
 });
 
 renderProgress();
+
 if (state.cleared) showScreen("clear");
 else if (state.started && state.step >= questions.length) renderFinal();
 else if (state.started) renderQuestion();
