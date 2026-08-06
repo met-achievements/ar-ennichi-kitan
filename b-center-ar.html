@@ -18,9 +18,7 @@
       overscroll-behavior: none;
     }
 
-    body.ar-page::after {
-      display: none !important;
-    }
+    body.ar-page::after { display: none !important; }
 
     body.ar-page > video {
       position: fixed !important;
@@ -53,13 +51,41 @@
       backdrop-filter: blur(8px);
     }
 
-    .kioku-guide[hidden] {
-      display: none;
-    }
+    .kioku-guide[hidden] { display: none; }
 
     .kioku-guide strong {
       display: block;
       margin-bottom: 4px;
+    }
+
+    .read-time {
+      position: fixed;
+      left: 50%;
+      top: 56%;
+      z-index: 45;
+      display: none;
+      width: min(calc(100% - 36px), 420px);
+      transform: translate(-50%, -50%);
+      padding: 20px 18px;
+      border-radius: 16px;
+      color: #fff8e8;
+      background: rgba(26, 12, 20, 0.84);
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .read-time.is-visible { display: block; }
+
+    .read-time strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.45rem;
+    }
+
+    .read-time span {
+      display: block;
+      font-size: .9rem;
+      opacity: .86;
     }
 
     .solve-overlay {
@@ -73,9 +99,7 @@
       backdrop-filter: blur(4px);
     }
 
-    .solve-overlay.is-visible {
-      display: grid;
-    }
+    .solve-overlay.is-visible { display: grid; }
 
     .solve-card {
       width: min(100%, 430px);
@@ -100,13 +124,8 @@
       font-size: 4.7rem;
     }
 
-    .solve-card h2 {
-      margin: 0 0 10px;
-    }
-
-    .solve-card p {
-      margin: 0 0 16px;
-    }
+    .solve-card h2 { margin: 0 0 10px; }
+    .solve-card p { margin: 0 0 16px; }
 
     .solve-card a {
       display: block;
@@ -134,9 +153,7 @@
       font-size: 13px;
     }
 
-    .debug-angle.is-visible {
-      display: block;
-    }
+    .debug-angle.is-visible { display: block; }
   </style>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -144,7 +161,7 @@
 
   <script>
     const query = new URLSearchParams(location.search);
-    const CORRECT_ANGLE = Number(query.get("angle") ?? 0);
+    const CORRECT_ANGLE = Number(query.get("angle") ?? 50);
     const DEBUG_MODE = query.get("debug") === "1";
 
     function normalizeAngle(value) {
@@ -180,9 +197,9 @@
     AFRAME.registerComponent("drag-rotate-snap", {
       schema: {
         startAngle: { type: "number", default: 138 },
-        correctAngle: { type: "number", default: 0 },
-        snapTolerance: { type: "number", default: 14 },
-        magnetTolerance: { type: "number", default: 7 },
+        correctAngle: { type: "number", default: 50 },
+        snapTolerance: { type: "number", default: 12 },
+        magnetTolerance: { type: "number", default: 5 },
         sensitivity: { type: "number", default: 0.48 }
       },
 
@@ -203,12 +220,6 @@
           this.dragging = true;
           this.lastX = event.clientX;
           this.pointerId = event.pointerId;
-
-          if (event.target.setPointerCapture) {
-            try {
-              event.target.setPointerCapture(event.pointerId);
-            } catch (_) {}
-          }
         };
 
         this.onPointerMove = event => {
@@ -281,7 +292,7 @@
           normalizeAngle(start),
           normalizeAngle(this.data.correctAngle)
         );
-        const duration = 380;
+        const duration = 420;
         const startedAt = performance.now();
 
         const animate = now => {
@@ -301,13 +312,6 @@
         };
 
         requestAnimationFrame(animate);
-      },
-
-      remove() {
-        window.removeEventListener("pointerdown", this.onPointerDown);
-        window.removeEventListener("pointermove", this.onPointerMove);
-        window.removeEventListener("pointerup", this.onPointerUp);
-        window.removeEventListener("pointercancel", this.onPointerUp);
       }
     });
   </script>
@@ -332,16 +336,19 @@
     「きおく」と読める角度に近づくと、模型がカチッとはまります。
   </div>
 
+  <div class="read-time" id="readTime" aria-live="polite">
+    <strong>「きおく」</strong>
+    <span>文字をよく確認してください…</span>
+  </div>
+
   <div class="debug-angle" id="debugAngle"></div>
 
   <div class="solve-overlay" id="solveOverlay" aria-live="polite">
     <div class="solve-card">
       <div class="festival-ticket" aria-label="祭札 い">い</div>
       <h2>記憶の形が重なった！</h2>
-      <p>
-        「きおく」の文字が現れ、二つ目の祭札「い」を発見した。
-      </p>
-      <a href="./index.html">本編に戻る</a>
+      <p>「きおく」の文字が現れ、二つ目の祭札「い」を発見した。</p>
+      <a href="./index.html?v=6">本編に戻る</a>
     </div>
   </div>
 
@@ -389,6 +396,7 @@
     const rotator = document.getElementById("kiokuModel");
     const guide = document.getElementById("kiokuGuide");
     const arTip = document.getElementById("arTip");
+    const readTime = document.getElementById("readTime");
     const solveOverlay = document.getElementById("solveOverlay");
     const lockRing = document.getElementById("lockRing");
     const debugAngle = document.getElementById("debugAngle");
@@ -396,8 +404,8 @@
     rotator.setAttribute("drag-rotate-snap", {
       startAngle: 138,
       correctAngle: CORRECT_ANGLE,
-      snapTolerance: 14,
-      magnetTolerance: 7,
+      snapTolerance: 12,
+      magnetTolerance: 5,
       sensitivity: 0.48
     });
 
@@ -413,6 +421,7 @@
 
     target.addEventListener("targetLost", () => {
       rotator.components["drag-rotate-snap"]?.setActive(false);
+
       if (!localStorage.getItem("b-center-ar-success")) {
         guide.hidden = true;
         arTip.style.display = "block";
@@ -423,14 +432,17 @@
       localStorage.setItem("b-center-ar-success", "true");
       guide.hidden = true;
       lockRing.setAttribute("visible", "true");
+      readTime.classList.add("is-visible");
 
       if (navigator.vibrate) {
         navigator.vibrate([60, 40, 90]);
       }
 
+      // 3.2秒は「きおく」の完成形を見せてから祭札を表示
       window.setTimeout(() => {
+        readTime.classList.remove("is-visible");
         solveOverlay.classList.add("is-visible");
-      }, 520);
+      }, 3200);
     });
   </script>
 </body>
