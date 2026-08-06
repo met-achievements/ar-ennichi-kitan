@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>B館AR | 記憶の形を合わせろ</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <style>
+    html,
+    body.ar-page {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: transparent !important;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+
+    body.ar-page::after {
+      display: none !important;
+    }
+
+    body.ar-page > video {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: -2 !important;
+    }
+
+    body.ar-page .a-canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: -1 !important;
+    }
+
+    .kioku-guide {
+      position: fixed;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 35;
+      width: min(calc(100% - 24px), 430px);
+      transform: translateX(-50%);
+      padding: 13px 15px;
+      border-radius: 14px;
+      color: #fff8e8;
+      background: rgba(10, 12, 22, 0.76);
+      text-align: center;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    .kioku-guide[hidden] {
+      display: none;
+    }
+
+    .kioku-guide strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .solve-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(8, 10, 18, 0.48);
+      backdrop-filter: blur(4px);
+    }
+
+    .solve-overlay.is-visible {
+      display: grid;
+    }
+
+    .solve-card {
+      width: min(100%, 430px);
+      padding: 23px 20px;
+      color: #281e29;
+      background: rgba(246, 237, 218, 0.97);
+      border-radius: 18px;
+      text-align: center;
+    }
+
+    .festival-ticket {
+      display: grid;
+      width: 126px;
+      height: 166px;
+      margin: 0 auto 17px;
+      place-items: center;
+      color: #f8e5a8;
+      background: #7e222b;
+      border: 4px double #d7a84a;
+      border-radius: 9px;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 4.7rem;
+    }
+
+    .solve-card h2 {
+      margin: 0 0 10px;
+    }
+
+    .solve-card p {
+      margin: 0 0 16px;
+    }
+
+    .solve-card a {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      color: #fff8e8;
+      background: linear-gradient(180deg, #aa3b41, #7e222b);
+      border: 1px solid #681a22;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .debug-angle {
+      position: fixed;
+      right: 10px;
+      top: 10px;
+      z-index: 80;
+      display: none;
+      padding: 7px 9px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.68);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .debug-angle.is-visible {
+      display: block;
+    }
+  </style>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <script>
+    const query = new URLSearchParams(location.search);
+    const CORRECT_ANGLE = Number(query.get("angle") ?? 0);
+    const DEBUG_MODE = query.get("debug") === "1";
+
+    function normalizeAngle(value) {
+      return ((value % 360) + 360) % 360;
+    }
+
+    function shortestDelta(from, to) {
+      return ((to - from + 540) % 360) - 180;
+    }
+
+    AFRAME.registerComponent("fit-kioku-model", {
+      init() {
+        this.el.addEventListener("model-loaded", () => {
+          const mesh = this.el.getObject3D("mesh");
+          if (!mesh) return;
+
+          const box = new THREE.Box3().setFromObject(mesh);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          const targetSize = 0.9;
+          const scale = targetSize / Math.max(size.x, size.y, size.z);
+
+          mesh.scale.setScalar(scale);
+          mesh.position.set(
+            -center.x * scale,
+            -center.y * scale,
+            -center.z * scale
+          );
+        });
+      }
+    });
+
+    AFRAME.registerComponent("drag-rotate-snap", {
+      schema: {
+        startAngle: { type: "number", default: 138 },
+        correctAngle: { type: "number", default: 0 },
+        snapTolerance: { type: "number", default: 14 },
+        magnetTolerance: { type: "number", default: 7 },
+        sensitivity: { type: "number", default: 0.48 }
+      },
+
+      init() {
+        this.currentAngle = this.data.startAngle;
+        this.dragging = false;
+        this.active = false;
+        this.solved = false;
+        this.lastX = 0;
+        this.pointerId = null;
+
+        this.setAngle(this.currentAngle);
+
+        this.onPointerDown = event => {
+          if (!this.active || this.solved) return;
+          if (event.target.closest("a, button")) return;
+
+          this.dragging = true;
+          this.lastX = event.clientX;
+          this.pointerId = event.pointerId;
+
+          if (event.target.setPointerCapture) {
+            try {
+              event.target.setPointerCapture(event.pointerId);
+            } catch (_) {}
+          }
+        };
+
+        this.onPointerMove = event => {
+          if (!this.dragging || this.solved) return;
+          if (this.pointerId !== null && event.pointerId !== this.pointerId) return;
+
+          const dx = event.clientX - this.lastX;
+          this.lastX = event.clientX;
+          this.currentAngle += dx * this.data.sensitivity;
+          this.setAngle(this.currentAngle);
+
+          const distance = Math.abs(
+            shortestDelta(
+              normalizeAngle(this.currentAngle),
+              normalizeAngle(this.data.correctAngle)
+            )
+          );
+
+          if (distance <= this.data.magnetTolerance) {
+            this.solve();
+          }
+        };
+
+        this.onPointerUp = event => {
+          if (!this.dragging) return;
+          if (this.pointerId !== null && event.pointerId !== this.pointerId) return;
+
+          this.dragging = false;
+          this.pointerId = null;
+
+          const distance = Math.abs(
+            shortestDelta(
+              normalizeAngle(this.currentAngle),
+              normalizeAngle(this.data.correctAngle)
+            )
+          );
+
+          if (distance <= this.data.snapTolerance) {
+            this.solve();
+          }
+        };
+
+        window.addEventListener("pointerdown", this.onPointerDown, { passive: true });
+        window.addEventListener("pointermove", this.onPointerMove, { passive: true });
+        window.addEventListener("pointerup", this.onPointerUp, { passive: true });
+        window.addEventListener("pointercancel", this.onPointerUp, { passive: true });
+      },
+
+      setAngle(angle) {
+        this.el.object3D.rotation.y = THREE.MathUtils.degToRad(angle);
+
+        const debug = document.getElementById("debugAngle");
+        if (debug) {
+          debug.textContent = `Y: ${normalizeAngle(angle).toFixed(1)}° / 正解: ${normalizeAngle(this.data.correctAngle).toFixed(1)}°`;
+        }
+      },
+
+      setActive(active) {
+        this.active = active;
+      },
+
+      solve() {
+        if (this.solved) return;
+
+        this.solved = true;
+        this.dragging = false;
+
+        const start = this.currentAngle;
+        const delta = shortestDelta(
+          normalizeAngle(start),
+          normalizeAngle(this.data.correctAngle)
+        );
+        const duration = 380;
+        const startedAt = performance.now();
+
+        const animate = now => {
+          const progress = Math.min(1, (now - startedAt) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          this.currentAngle = start + delta * eased;
+          this.setAngle(this.currentAngle);
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+            return;
+          }
+
+          this.currentAngle = this.data.correctAngle;
+          this.setAngle(this.currentAngle);
+          this.el.emit("angle-solved");
+        };
+
+        requestAnimationFrame(animate);
+      },
+
+      remove() {
+        window.removeEventListener("pointerdown", this.onPointerDown);
+        window.removeEventListener("pointermove", this.onPointerMove);
+        window.removeEventListener("pointerup", this.onPointerUp);
+        window.removeEventListener("pointercancel", this.onPointerUp);
+      }
+    });
+  </script>
+</head>
+
+<body class="ar-page">
+  <div class="ar-hud">
+    <div class="ar-card">
+      <h1>二つ目の祭札を探せ</h1>
+      <p>
+        B館入口の「B-Center」を写してください。
+        模型が現れたら、看板を映したまま指で左右に回し、
+        「きおく」と読める形を完成させよう。
+      </p>
+    </div>
+  </div>
+
+  <div class="ar-tip" id="arTip">B-Centerをカメラに映してください…</div>
+
+  <div class="kioku-guide" id="kiokuGuide" hidden>
+    <strong>模型を左右にスワイプ</strong>
+    「きおく」と読める角度に近づくと、模型がカチッとはまります。
+  </div>
+
+  <div class="debug-angle" id="debugAngle"></div>
+
+  <div class="solve-overlay" id="solveOverlay" aria-live="polite">
+    <div class="solve-card">
+      <div class="festival-ticket" aria-label="祭札 い">い</div>
+      <h2>記憶の形が重なった！</h2>
+      <p>
+        「きおく」の文字が現れ、二つ目の祭札「い」を発見した。
+      </p>
+      <a href="./index.html">本編に戻る</a>
+    </div>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets/b-center.mind; autoStart: true; maxTrack: 1; uiScanning: true; uiLoading: true;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded>
+
+    <a-assets>
+      <a-asset-item id="kiokuAsset" src="./assets/models/kioku.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-entity id="modelPivot" position="0 0.02 0.22">
+        <a-entity
+          id="kiokuModel"
+          gltf-model="#kiokuAsset"
+          fit-kioku-model
+          drag-rotate-snap>
+        </a-entity>
+      </a-entity>
+
+      <a-ring
+        id="lockRing"
+        visible="false"
+        color="#d7a84a"
+        radius-inner="0.39"
+        radius-outer="0.42"
+        position="0 0 0.04"
+        animation__pulse="property: scale; from: 0.65 0.65 0.65; to: 1.15 1.15 1.15; dur: 600; easing: easeOutCubic">
+      </a-ring>
+
+      <a-entity light="type: ambient; intensity: 1.3"></a-entity>
+      <a-entity light="type: directional; intensity: 1.2" position="-1 2 2"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const target = document.getElementById("target");
+    const rotator = document.getElementById("kiokuModel");
+    const guide = document.getElementById("kiokuGuide");
+    const arTip = document.getElementById("arTip");
+    const solveOverlay = document.getElementById("solveOverlay");
+    const lockRing = document.getElementById("lockRing");
+    const debugAngle = document.getElementById("debugAngle");
+
+    rotator.setAttribute("drag-rotate-snap", {
+      startAngle: 138,
+      correctAngle: CORRECT_ANGLE,
+      snapTolerance: 14,
+      magnetTolerance: 7,
+      sensitivity: 0.48
+    });
+
+    if (DEBUG_MODE) {
+      debugAngle.classList.add("is-visible");
+    }
+
+    target.addEventListener("targetFound", () => {
+      rotator.components["drag-rotate-snap"]?.setActive(true);
+      guide.hidden = false;
+      arTip.style.display = "none";
+    });
+
+    target.addEventListener("targetLost", () => {
+      rotator.components["drag-rotate-snap"]?.setActive(false);
+      if (!localStorage.getItem("b-center-ar-success")) {
+        guide.hidden = true;
+        arTip.style.display = "block";
+      }
+    });
+
+    rotator.addEventListener("angle-solved", () => {
+      localStorage.setItem("b-center-ar-success", "true");
+      guide.hidden = true;
+      lockRing.setAttribute("visible", "true");
+
+      if (navigator.vibrate) {
+        navigator.vibrate([60, 40, 90]);
+      }
+
+      window.setTimeout(() => {
+        solveOverlay.classList.add("is-visible");
+      }, 520);
+    });
+  </script>
+</body>
+</html>
