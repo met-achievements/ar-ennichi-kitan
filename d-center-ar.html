@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>D館AR | 最初の祭札</title>
+  <title>D館AR | 第一の記憶</title>
   <link rel="stylesheet" href="./style.css">
 
   <style>
@@ -14,9 +14,12 @@
       margin: 0;
       overflow: hidden;
       background: transparent !important;
+      overscroll-behavior: none;
     }
 
-    body.ar-page::after { display: none !important; }
+    body.ar-page::after {
+      display: none !important;
+    }
 
     body.ar-page > video {
       position: fixed !important;
@@ -33,38 +36,100 @@
       z-index: -1 !important;
     }
 
-    .success-panel {
+    .walk-guide {
       position: fixed;
       left: 50%;
-      bottom: max(20px, env(safe-area-inset-bottom));
-      z-index: 50;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      z-index: 35;
       display: none;
-      width: min(calc(100% - 28px), 430px);
+      width: min(calc(100% - 24px), 440px);
       transform: translateX(-50%);
-      padding: 18px;
-      color: #281e29;
-      background: rgba(246, 237, 218, .97);
-      border-radius: 16px;
+      padding: 15px 16px;
+      color: #fff8e8;
+      background: rgba(10, 12, 22, 0.82);
+      border-radius: 15px;
       text-align: center;
       backdrop-filter: blur(8px);
     }
 
-    .success-panel.is-visible { display: block; }
-
-    .success-panel strong {
+    .walk-guide.is-visible {
       display: block;
-      margin-bottom: 7px;
-      font-size: 1.25rem;
     }
 
-    .success-panel p {
-      margin: 0 0 13px;
+    .walk-guide strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.05rem;
     }
 
-    .success-panel a {
-      display: block;
+    .walk-guide p {
+      margin: 0 0 12px;
+      line-height: 1.6;
+      font-size: .92rem;
+    }
+
+    .walk-guide button {
       width: 100%;
       padding: 13px 16px;
+      color: #fff8e8;
+      background: linear-gradient(180deg, #aa3b41, #7e222b);
+      border: 1px solid #681a22;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(8, 10, 18, .5);
+      backdrop-filter: blur(4px);
+    }
+
+    .result-overlay.is-visible {
+      display: grid;
+    }
+
+    .result-card {
+      width: min(100%, 430px);
+      padding: 23px 20px;
+      color: #281e29;
+      background: rgba(246, 237, 218, .97);
+      border-radius: 18px;
+      text-align: center;
+    }
+
+    .festival-ticket {
+      display: grid;
+      width: 126px;
+      height: 166px;
+      margin: 0 auto 17px;
+      place-items: center;
+      color: #f8e5a8;
+      background: #7e222b;
+      border: 4px double #d7a84a;
+      border-radius: 9px;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 4.7rem;
+    }
+
+    .result-card h2 {
+      margin: 0 0 10px;
+    }
+
+    .result-card p {
+      margin: 0 0 16px;
+      line-height: 1.7;
+    }
+
+    .result-card a {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
       color: #fff8e8;
       background: linear-gradient(180deg, #aa3b41, #7e222b);
       border: 1px solid #681a22;
@@ -76,6 +141,31 @@
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <script>
+    AFRAME.registerComponent("fit-kioku-model", {
+      init() {
+        this.el.addEventListener("model-loaded", () => {
+          const mesh = this.el.getObject3D("mesh");
+          if (!mesh) return;
+
+          const box = new THREE.Box3().setFromObject(mesh);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+
+          const targetSize = 0.88;
+          const scale = targetSize / Math.max(size.x, size.y, size.z);
+
+          mesh.scale.setScalar(scale);
+          mesh.position.set(
+            -center.x * scale,
+            -center.y * scale,
+            -center.z * scale
+          );
+        });
+      }
+    });
+  </script>
 </head>
 
 <body class="ar-page">
@@ -84,17 +174,30 @@
       <h1>最初の祭札を探せ</h1>
       <p>
         D館入口の「D-Center」をカメラに写してください。
-        看板全体と、その周囲が少し入るようにすると認識しやすいです。
+        模型が現れたら、看板をなるべく画面に残したまま左右に回り込み、
+        正しい方向から文字を読み取ってください。
       </p>
     </div>
   </div>
 
   <div class="ar-tip" id="arTip">D-Centerをカメラに映してください…</div>
 
-  <div class="success-panel" id="successPanel" aria-live="polite">
-    <strong>最初の祭札を発見した！</strong>
-    <p>祭札「ず」を取り戻した。次の記憶を探しに行こう。</p>
-    <a href="./index.html?v=9">本編に戻る</a>
+  <div class="walk-guide" id="walkGuide">
+    <strong>自分が動いて、見える角度を探そう</strong>
+    <p>
+      指で模型は回せません。スマホを持ったまま少しずつ左右へ移動して、
+      文字として読める場所を探してください。
+    </p>
+    <button id="confirmButton" type="button">読めた！</button>
+  </div>
+
+  <div class="result-overlay" id="resultOverlay" aria-live="polite">
+    <div class="result-card">
+      <div class="festival-ticket" aria-label="祭札 ず">ず</div>
+      <h2>最初の祭札を発見した！</h2>
+      <p>第一の記憶がよみがえった。祭札「ず」を取り戻した。</p>
+      <a href="./index.html?v=10">本編に戻る</a>
+    </div>
   </div>
 
   <a-scene
@@ -106,45 +209,79 @@
     embedded>
 
     <a-assets>
-      <img id="zuTicket" src="./assets/ui/festival-card-zu.png" alt="祭札 ず">
+      <a-asset-item id="kiokuAsset" src="./assets/models/kioku.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
-      <a-plane
-        id="ticketPlane"
-        src="#zuTicket"
-        position="0 0.22 0.03"
-        height="0.68"
-        width="0.54"
-        transparent="true"
-        animation="property: position; to: 0 0.30 0.03; dir: alternate; loop: true; dur: 1200; easing: easeInOutSine">
-      </a-plane>
+      <!--
+        モデル自体は固定。
+        ユーザーがD-Centerの周囲を左右に移動して視点を変える。
+        指による回転操作は入れていません。
+      -->
+      <a-entity id="modelAnchor" position="0 0.02 0.28">
+        <a-entity
+          id="kiokuModel"
+          gltf-model="#kiokuAsset"
+          fit-kioku-model
+          rotation="0 0 0">
+        </a-entity>
+      </a-entity>
+
+      <a-ring
+        color="#d7a84a"
+        radius-inner="0.36"
+        radius-outer="0.39"
+        position="0 -0.12 0.03"
+        opacity="0.8">
+      </a-ring>
+
+      <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+      <a-entity light="type: directional; intensity: 1.2" position="-1 2 2"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
     const target = document.getElementById("target");
     const arTip = document.getElementById("arTip");
-    const successPanel = document.getElementById("successPanel");
-    let found = false;
+    const walkGuide = document.getElementById("walkGuide");
+    const confirmButton = document.getElementById("confirmButton");
+    const resultOverlay = document.getElementById("resultOverlay");
+
+    let targetVisible = false;
+    let completed = localStorage.getItem("d-center-ar-success") === "true";
 
     target.addEventListener("targetFound", () => {
-      if (found) return;
-      found = true;
-
-      localStorage.setItem("d-center-ar-success", "true");
+      targetVisible = true;
       arTip.style.display = "none";
+
+      if (!completed) {
+        walkGuide.classList.add("is-visible");
+      }
+    });
+
+    target.addEventListener("targetLost", () => {
+      targetVisible = false;
+
+      if (!completed) {
+        walkGuide.classList.remove("is-visible");
+        arTip.style.display = "block";
+      }
+    });
+
+    confirmButton.addEventListener("click", () => {
+      if (!targetVisible || completed) return;
+
+      completed = true;
+      localStorage.setItem("d-center-ar-success", "true");
+      walkGuide.classList.remove("is-visible");
 
       if (navigator.vibrate) {
         navigator.vibrate([60, 40, 90]);
       }
 
-      // AR上の「ず」を見せてから、下に確認パネルを出す。
-      window.setTimeout(() => {
-        successPanel.classList.add("is-visible");
-      }, 1200);
+      resultOverlay.classList.add("is-visible");
     });
   </script>
 </body>
