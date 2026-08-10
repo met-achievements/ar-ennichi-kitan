@@ -33,49 +33,38 @@
       z-index: -1 !important;
     }
 
-    .d-overlay {
+    .success-panel {
       position: fixed;
-      inset: 0;
+      left: 50%;
+      bottom: max(20px, env(safe-area-inset-bottom));
       z-index: 50;
       display: none;
-      place-items: center;
+      width: min(calc(100% - 28px), 430px);
+      transform: translateX(-50%);
       padding: 18px;
-      background: rgba(8, 10, 18, .45);
-      backdrop-filter: blur(4px);
-    }
-
-    .d-overlay.is-visible { display: grid; }
-
-    .d-card {
-      width: min(100%, 420px);
-      padding: 24px 20px;
       color: #281e29;
       background: rgba(246, 237, 218, .97);
-      border-radius: 18px;
+      border-radius: 16px;
       text-align: center;
+      backdrop-filter: blur(8px);
     }
 
-    .festival-ticket {
-      display: grid;
-      width: 126px;
-      height: 166px;
-      margin: 0 auto 18px;
-      place-items: center;
-      color: #f8e5a8;
-      background: #7e222b;
-      border: 4px double #d7a84a;
-      border-radius: 9px;
-      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-      font-size: 4.7rem;
+    .success-panel.is-visible { display: block; }
+
+    .success-panel strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 1.25rem;
     }
 
-    .d-card h2 { margin: 0 0 10px; }
-    .d-card p { margin: 0 0 16px; }
+    .success-panel p {
+      margin: 0 0 13px;
+    }
 
-    .d-card a {
+    .success-panel a {
       display: block;
       width: 100%;
-      padding: 14px 16px;
+      padding: 13px 16px;
       color: #fff8e8;
       background: linear-gradient(180deg, #aa3b41, #7e222b);
       border: 1px solid #681a22;
@@ -102,13 +91,10 @@
 
   <div class="ar-tip" id="arTip">D-Centerをカメラに映してください…</div>
 
-  <div class="d-overlay" id="resultOverlay" aria-live="polite">
-    <div class="d-card">
-      <div class="festival-ticket" aria-label="祭札 ず">ず</div>
-      <h2>最初の祭札を発見した！</h2>
-      <p>祭札「ず」を取り戻した。次の記憶を探しに行こう。</p>
-      <a href="./index.html?v=8">本編に戻る</a>
-    </div>
+  <div class="success-panel" id="successPanel" aria-live="polite">
+    <strong>最初の祭札を発見した！</strong>
+    <p>祭札「ず」を取り戻した。次の記憶を探しに行こう。</p>
+    <a href="./index.html?v=9">本編に戻る</a>
   </div>
 
   <a-scene
@@ -119,38 +105,29 @@
     device-orientation-permission-ui="enabled: false"
     embedded>
 
+    <a-assets>
+      <img id="zuTicket" src="./assets/ui/festival-card-zu.png" alt="祭札 ず">
+    </a-assets>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity id="target" mindar-image-target="targetIndex: 0">
       <a-plane
-        color="#7e222b"
-        opacity="0.88"
-        position="0 0.18 0.03"
-        height="0.55"
-        width="0.42">
+        id="ticketPlane"
+        src="#zuTicket"
+        position="0 0.22 0.03"
+        height="0.68"
+        width="0.54"
+        transparent="true"
+        animation="property: position; to: 0 0.30 0.03; dir: alternate; loop: true; dur: 1200; easing: easeInOutSine">
       </a-plane>
-
-      <a-text
-        value="ず"
-        align="center"
-        color="#f8e5a8"
-        position="0 0.18 0.04"
-        scale="2.4 2.4 2.4">
-      </a-text>
-
-      <a-ring
-        color="#d7a84a"
-        radius-inner="0.28"
-        radius-outer="0.31"
-        position="0 -0.2 0.04">
-      </a-ring>
     </a-entity>
   </a-scene>
 
   <script>
     const target = document.getElementById("target");
-    const resultOverlay = document.getElementById("resultOverlay");
     const arTip = document.getElementById("arTip");
+    const successPanel = document.getElementById("successPanel");
     let found = false;
 
     target.addEventListener("targetFound", () => {
@@ -160,12 +137,14 @@
       localStorage.setItem("d-center-ar-success", "true");
       arTip.style.display = "none";
 
-      if (navigator.vibrate) navigator.vibrate([60, 40, 90]);
+      if (navigator.vibrate) {
+        navigator.vibrate([60, 40, 90]);
+      }
 
-      // 祭札が看板上に浮かぶ瞬間を少し見せてから結果画面
+      // AR上の「ず」を見せてから、下に確認パネルを出す。
       window.setTimeout(() => {
-        resultOverlay.classList.add("is-visible");
-      }, 1500);
+        successPanel.classList.add("is-visible");
+      }, 1200);
     });
   </script>
 </body>
