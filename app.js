@@ -1,4 +1,4 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV14";
+const STORAGE_KEY = "arEnnichiKitanProgressV15";
 
 const questions = [
   {
@@ -9,7 +9,7 @@ const questions = [
     letter: "ず",
     image: "./assets/images/d-center.jpg",
     imageAlt: "D-Centerの看板",
-    arPage: "./d-center-ar.html?v=14",
+    arPage: "./d-center-ar.html?v=15",
     arFlag: "d-center-ar-success",
     launchLabel: "D館ARを起動する",
     help: "D-Centerをなるべく画面に残したまま、階段とは反対側へゆっくり回り込んでください。"

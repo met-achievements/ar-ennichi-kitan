@@ -42,14 +42,55 @@
       margin:0; line-height:1.55; font-size:.9rem;
     }
 
-    .confirm-button {
-      display:none; width:100%; margin-top:11px; padding:13px 16px;
-      color:#fff8e8; background:linear-gradient(180deg,#aa3b41,#7e222b);
-      border:1px solid #681a22; border-radius:10px;
-      font:inherit; font-weight:700;
+    .answer-area {
+      display: none;
+      margin-top: 12px;
     }
 
-    .confirm-button.is-visible { display:block; }
+    .answer-area.is-visible {
+      display: block;
+    }
+
+    .answer-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .answer-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .answer-input {
+      min-width: 0;
+      padding: 12px 13px;
+      color: #231a22;
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 16px;
+    }
+
+    .answer-button {
+      padding: 12px 15px;
+      color: #fff8e8;
+      background: linear-gradient(180deg,#aa3b41,#7e222b);
+      border: 1px solid #681a22;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .answer-feedback {
+      min-height: 1.5em;
+      margin-top: 8px !important;
+      font-size: .88rem !important;
+    }
 
     .result-overlay {
       position:fixed; inset:0; z-index:60; display:none;
@@ -137,9 +178,22 @@
     <p id="guideText">
       ゆっくり横へ移動して、文字がひとつの言葉になる場所を探してください。
     </p>
-    <button class="confirm-button" id="confirmButton" type="button">
-      「きおく」と読めた！
-    </button>
+    <div class="answer-area" id="answerArea">
+      <label class="answer-label" for="answerInput">何と読めた？</label>
+      <div class="answer-row">
+        <input
+          class="answer-input"
+          id="answerInput"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="答えを入力">
+        <button class="answer-button" id="answerButton" type="button">答える</button>
+      </div>
+      <p class="answer-feedback" id="answerFeedback" aria-live="polite"></p>
+    </div>
   </div>
 
   <div class="debug-box" id="debugBox">target: -</div>
@@ -148,8 +202,8 @@
     <div class="result-card">
       <div class="festival-ticket" aria-label="祭札 ず">ず</div>
       <h2>最初の祭札を発見した！</h2>
-      <p>「きおく」を読み解き、第一の記憶がよみがえった。祭札「ず」を取り戻した。</p>
-      <a href="./index.html?v=14">本編に戻る</a>
+      <p>「きおく」――散らばっていた形が、ひとつの言葉になった。第一の記憶がよみがえる。祭札「ず」を取り戻した。</p>
+      <a href="./index.html?v=15">本編に戻る</a>
     </div>
   </div>
 
@@ -216,7 +270,10 @@
     const walkGuide = document.getElementById("walkGuide");
     const guideTitle = document.getElementById("guideTitle");
     const guideText = document.getElementById("guideText");
-    const confirmButton = document.getElementById("confirmButton");
+    const answerArea = document.getElementById("answerArea");
+    const answerInput = document.getElementById("answerInput");
+    const answerButton = document.getElementById("answerButton");
+    const answerFeedback = document.getElementById("answerFeedback");
     const resultOverlay = document.getElementById("resultOverlay");
     const debugBox = document.getElementById("debugBox");
 
@@ -252,8 +309,8 @@
         // UIと「読めた」ボタンを残す。これで操作が途切れにくい。
         if (hasSeenModel) {
           walkGuide.classList.add("is-visible");
-          guideTitle.textContent = "見えた文字を思い出そう";
-          guideText.textContent = "認識が一瞬切れても大丈夫。読めたなら、そのまま下のボタンを押してください。";
+          guideTitle.textContent = "何と読めた？";
+          guideText.textContent = "認識が一瞬切れても大丈夫。見えた言葉を下に入力してください。";
           arTip.style.display = "none";
         } else {
           walkGuide.classList.remove("is-visible");
@@ -262,9 +319,9 @@
         debugBox.textContent = "target: -";
       }
 
-      // 重要：どのターゲットでも一度モデルを見つけたら押せる。
-      // 「target:2まで行かないと進めない」という条件は廃止。
-      confirmButton.classList.toggle("is-visible", hasSeenModel);
+      // 一度でもモデルを見つけたら入力欄を残す。
+      // 追跡が一瞬切れても、見えた文字を入力して進める。
+      answerArea.classList.toggle("is-visible", hasSeenModel);
     }
 
     function updateActive() {
@@ -286,17 +343,47 @@
       });
     }
 
-    confirmButton.addEventListener("click", () => {
+    function normalizeAnswer(value) {
+      return value
+        .normalize("NFKC")
+        .replace(/\s+/g, "")
+        .replace(/[・･。、,.!！?？]/g, "")
+        .toLowerCase();
+    }
+
+    function isCorrectAnswer(value) {
+      const answer = normalizeAnswer(value);
+      return ["きおく", "キオク", "記憶"].some(candidate => normalizeAnswer(candidate) === answer);
+    }
+
+    function submitAnswer() {
       if (completed || !hasSeenModel) return;
+
+      if (!isCorrectAnswer(answerInput.value)) {
+        answerFeedback.textContent =
+          "まだ記憶の形が重なっていないようだ。もう一度、見る場所を変えてみよう。";
+        answerInput.focus();
+        return;
+      }
 
       completed = true;
       localStorage.setItem("d-center-ar-success", "true");
+
       walkGuide.classList.remove("is-visible");
+      answerArea.classList.remove("is-visible");
 
       if (navigator.vibrate) navigator.vibrate([60,40,90]);
 
-      // ここで必ず祭札画面へ進む。targetIndexには依存しない。
       resultOverlay.classList.add("is-visible");
+    }
+
+    answerButton.addEventListener("click", submitAnswer);
+
+    answerInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitAnswer();
+      }
     });
   </script>
 </body>
