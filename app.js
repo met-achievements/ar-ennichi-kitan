@@ -1,18 +1,18 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV8";
+const STORAGE_KEY = "arEnnichiKitanProgressV12";
 
 const questions = [
   {
     type: "ar",
     destination: "D館の入口へ向かえ",
-    story: "最初の祭札は、D-Centerの看板に残された記憶の中に眠っている。",
-    question: "D館入口の「D-Center」をカメラに写してください。",
+    story: "最初の祭札は、D-Centerの前に残された立体の記憶に隠されている。",
+    question: "D-Centerをカメラに映し、模型の文字が読める場所まで自分で回り込もう。",
     letter: "ず",
     image: "./assets/images/d-center.jpg",
     imageAlt: "D-Centerの看板",
-    arPage: "./d-center-ar.html?v=1",
+    arPage: "./d-center-ar.html?v=12",
     arFlag: "d-center-ar-success",
     launchLabel: "D館ARを起動する",
-    help: "D-Centerの看板全体と、周囲の柱やレンガが少し入るように写してください。"
+    help: "D-Centerをなるべく画面に残したまま、階段とは反対側へゆっくり回り込んでください。"
   },
   {
     type: "ar",
@@ -25,7 +25,7 @@ const questions = [
     arPage: "./b-center-ar.html?v=3",
     arFlag: "b-center-ar-success",
     launchLabel: "B館ARを起動する",
-    help: "看板を画面に入れたまま模型を左右にスワイプし、「きおく」と読める角度を探してください。"
+    help: "看板を画面に入れたまま模型を左右に操作し、「きおく」と読める角度を探してください。"
   },
   {
     type: "ar",
@@ -186,6 +186,7 @@ function verifyArStage(current) {
   if (!state.letters.includes(current.letter)) {
     state.letters.push(current.letter);
   }
+
   saveState();
   renderReward(current);
 }

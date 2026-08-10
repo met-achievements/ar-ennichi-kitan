@@ -40,21 +40,19 @@
       position: fixed;
       left: 50%;
       bottom: max(18px, env(safe-area-inset-bottom));
-      z-index: 35;
+      z-index: 40;
       display: none;
       width: min(calc(100% - 24px), 440px);
       transform: translateX(-50%);
       padding: 15px 16px;
       color: #fff8e8;
-      background: rgba(10, 12, 22, 0.82);
+      background: rgba(10, 12, 22, .84);
       border-radius: 15px;
       text-align: center;
       backdrop-filter: blur(8px);
     }
 
-    .walk-guide.is-visible {
-      display: block;
-    }
+    .walk-guide.is-visible { display: block; }
 
     .walk-guide strong {
       display: block;
@@ -63,13 +61,15 @@
     }
 
     .walk-guide p {
-      margin: 0 0 12px;
-      line-height: 1.6;
+      margin: 0;
+      line-height: 1.65;
       font-size: .92rem;
     }
 
-    .walk-guide button {
+    .confirm-button {
+      display: none;
       width: 100%;
+      margin-top: 12px;
       padding: 13px 16px;
       color: #fff8e8;
       background: linear-gradient(180deg, #aa3b41, #7e222b);
@@ -79,20 +79,20 @@
       font-weight: 700;
     }
 
+    .confirm-button.is-visible { display: block; }
+
     .result-overlay {
       position: fixed;
       inset: 0;
-      z-index: 50;
+      z-index: 60;
       display: none;
       place-items: center;
       padding: 18px;
-      background: rgba(8, 10, 18, .5);
+      background: rgba(8, 10, 18, .50);
       backdrop-filter: blur(4px);
     }
 
-    .result-overlay.is-visible {
-      display: grid;
-    }
+    .result-overlay.is-visible { display: grid; }
 
     .result-card {
       width: min(100%, 430px);
@@ -117,9 +117,7 @@
       font-size: 4.7rem;
     }
 
-    .result-card h2 {
-      margin: 0 0 10px;
-    }
+    .result-card h2 { margin: 0 0 10px; }
 
     .result-card p {
       margin: 0 0 16px;
@@ -137,6 +135,22 @@
       text-decoration: none;
       font-weight: 700;
     }
+
+    .debug-box {
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      right: 10px;
+      z-index: 100;
+      display: none;
+      padding: 7px 10px;
+      color: white;
+      background: rgba(0, 0, 0, .72);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .debug-box.is-visible { display: block; }
   </style>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -144,6 +158,10 @@
 
   <script>
     AFRAME.registerComponent("fit-kioku-model", {
+      schema: {
+        size: { type: "number", default: 0.78 }
+      },
+
       init() {
         this.el.addEventListener("model-loaded", () => {
           const mesh = this.el.getObject3D("mesh");
@@ -152,9 +170,7 @@
           const box = new THREE.Box3().setFromObject(mesh);
           const size = box.getSize(new THREE.Vector3());
           const center = box.getCenter(new THREE.Vector3());
-
-          const targetSize = 0.88;
-          const scale = targetSize / Math.max(size.x, size.y, size.z);
+          const scale = this.data.size / Math.max(size.x, size.y, size.z);
 
           mesh.scale.setScalar(scale);
           mesh.position.set(
@@ -173,9 +189,10 @@
     <div class="ar-card">
       <h1>最初の祭札を探せ</h1>
       <p>
-        D館入口の「D-Center」をカメラに写してください。
-        模型が現れたら、看板をなるべく画面に残したまま左右に回り込み、
-        正しい方向から文字を読み取ってください。
+        D館入口の「D-Center」を写してください。
+        模型が現れたら、看板をなるべく画面に残したまま
+        階段とは反対側へゆっくり回り込み、
+        「きおく」と読める場所を探してください。
       </p>
     </div>
   </div>
@@ -183,25 +200,41 @@
   <div class="ar-tip" id="arTip">D-Centerをカメラに映してください…</div>
 
   <div class="walk-guide" id="walkGuide">
-    <strong>自分が動いて、見える角度を探そう</strong>
-    <p>
-      指で模型は回せません。スマホを持ったまま少しずつ左右へ移動して、
-      文字として読める場所を探してください。
+    <strong id="guideTitle">そのまま、ゆっくり横へ</strong>
+    <p id="guideText">
+      D-Centerを画面から外さないようにして、少しずつ回り込んでください。
     </p>
-    <button id="confirmButton" type="button">読めた！</button>
+    <button class="confirm-button" id="confirmButton" type="button">
+      「きおく」と読めた！
+    </button>
   </div>
+
+  <div class="debug-box" id="debugBox">target: -</div>
 
   <div class="result-overlay" id="resultOverlay" aria-live="polite">
     <div class="result-card">
       <div class="festival-ticket" aria-label="祭札 ず">ず</div>
       <h2>最初の祭札を発見した！</h2>
-      <p>第一の記憶がよみがえった。祭札「ず」を取り戻した。</p>
-      <a href="./index.html?v=10">本編に戻る</a>
+      <p>
+        「きおく」の形を見つけ、第一の記憶がよみがえった。
+        祭札「ず」を取り戻した。
+      </p>
+      <a href="./index.html?v=12">本編に戻る</a>
     </div>
   </div>
 
   <a-scene
-    mindar-image="imageTargetSrc: ./targets/d-center.mind; autoStart: true; maxTrack: 1; uiScanning: true; uiLoading: true;"
+    mindar-image="
+      imageTargetSrc: ./targets/d-center.mind;
+      autoStart: true;
+      maxTrack: 1;
+      warmupTolerance: 1;
+      missTolerance: 10;
+      filterMinCF: 0.001;
+      filterBeta: 0.01;
+      uiScanning: true;
+      uiLoading: true;
+    "
     color-space="sRGB"
     renderer="colorManagement: true, physicallyCorrectLights; alpha: true"
     vr-mode-ui="enabled: false"
@@ -214,68 +247,173 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity id="target" mindar-image-target="targetIndex: 0">
-      <!--
-        モデル自体は固定。
-        ユーザーがD-Centerの周囲を左右に移動して視点を変える。
-        指による回転操作は入れていません。
-      -->
-      <a-entity id="modelAnchor" position="0 0.02 0.28">
+    <!--
+      d-center.mind は「正面 → 浅い斜め → 中間 → 深い斜め」
+      の順で4枚コンパイルした前提。
+
+      各ターゲットは別画像として追跡されるため、
+      写真の撮影角度に合わせてモデルのY回転を補正している。
+      深い斜め（targetIndex 3）で、kioku.glb が約50°の読みやすい見え方になる。
+    -->
+
+    <!-- 正面 -->
+    <a-entity id="target0" mindar-image-target="targetIndex: 0">
+      <a-entity position="0 0.05 0.24">
         <a-entity
-          id="kiokuModel"
           gltf-model="#kiokuAsset"
-          fit-kioku-model
-          rotation="0 0 0">
+          fit-kioku-model="size: 0.78"
+          rotation="0 100 0">
         </a-entity>
       </a-entity>
+      <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
+    </a-entity>
 
+    <!-- 浅い斜め：約18° -->
+    <a-entity id="target1" mindar-image-target="targetIndex: 1">
+      <a-entity position="0.01 0.05 0.24">
+        <a-entity
+          gltf-model="#kiokuAsset"
+          fit-kioku-model="size: 0.78"
+          rotation="0 82 0">
+        </a-entity>
+      </a-entity>
+      <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
+    </a-entity>
+
+    <!-- 中間：約35° -->
+    <a-entity id="target2" mindar-image-target="targetIndex: 2">
+      <a-entity position="0.02 0.05 0.24">
+        <a-entity
+          gltf-model="#kiokuAsset"
+          fit-kioku-model="size: 0.78"
+          rotation="0 65 0">
+        </a-entity>
+      </a-entity>
+      <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
+    </a-entity>
+
+    <!-- 深い斜め：約50°。「きおく」が読めるゴール位置 -->
+    <a-entity id="target3" mindar-image-target="targetIndex: 3">
+      <a-entity position="0.03 0.05 0.24">
+        <a-entity
+          gltf-model="#kiokuAsset"
+          fit-kioku-model="size: 0.78"
+          rotation="0 50 0">
+        </a-entity>
+      </a-entity>
       <a-ring
         color="#d7a84a"
-        radius-inner="0.36"
-        radius-outer="0.39"
+        radius-inner="0.34"
+        radius-outer="0.37"
         position="0 -0.12 0.03"
         opacity="0.8">
       </a-ring>
-
       <a-entity light="type: ambient; intensity: 1.35"></a-entity>
-      <a-entity light="type: directional; intensity: 1.2" position="-1 2 2"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
     </a-entity>
   </a-scene>
 
   <script>
-    const target = document.getElementById("target");
     const arTip = document.getElementById("arTip");
     const walkGuide = document.getElementById("walkGuide");
+    const guideTitle = document.getElementById("guideTitle");
+    const guideText = document.getElementById("guideText");
     const confirmButton = document.getElementById("confirmButton");
     const resultOverlay = document.getElementById("resultOverlay");
+    const debugBox = document.getElementById("debugBox");
 
-    let targetVisible = false;
+    const params = new URLSearchParams(location.search);
+    const debugMode = params.get("debug") === "1";
+
+    if (debugMode) {
+      debugBox.classList.add("is-visible");
+    }
+
+    const visibleTargets = new Set();
+    let activeIndex = -1;
     let completed = localStorage.getItem("d-center-ar-success") === "true";
 
-    target.addEventListener("targetFound", () => {
-      targetVisible = true;
-      arTip.style.display = "none";
-
-      if (!completed) {
-        walkGuide.classList.add("is-visible");
+    const guideByIndex = [
+      {
+        title: "模型が現れた",
+        text: "D-Centerを画面に残したまま、階段とは反対側へゆっくり移動してください。"
+      },
+      {
+        title: "その調子。もう少し横へ",
+        text: "模型の文字が少しずつ重なって見えてきます。急がずゆっくり進もう。"
+      },
+      {
+        title: "かなり近い",
+        text: "あと少しだけ回り込んで、文字がひとつの言葉になる場所を探してください。"
+      },
+      {
+        title: "形が重なった",
+        text: "何と読める？ 完成した模型をよく確認してください。"
       }
-    });
+    ];
 
-    target.addEventListener("targetLost", () => {
-      targetVisible = false;
+    function refreshGuide() {
+      if (completed) return;
 
-      if (!completed) {
+      if (activeIndex < 0) {
         walkGuide.classList.remove("is-visible");
+        confirmButton.classList.remove("is-visible");
         arTip.style.display = "block";
+        debugBox.textContent = "target: -";
+        return;
       }
-    });
+
+      arTip.style.display = "none";
+      walkGuide.classList.add("is-visible");
+
+      const guide = guideByIndex[activeIndex] || guideByIndex[0];
+      guideTitle.textContent = guide.title;
+      guideText.textContent = guide.text;
+
+      if (activeIndex === 3) {
+        confirmButton.classList.add("is-visible");
+      } else {
+        confirmButton.classList.remove("is-visible");
+      }
+
+      debugBox.textContent = `target: ${activeIndex}`;
+    }
+
+    function setActiveFromVisible() {
+      if (visibleTargets.size === 0) {
+        activeIndex = -1;
+      } else {
+        // 回り込み方向に進んだ時、より深い角度のターゲットを優先。
+        activeIndex = Math.max(...visibleTargets);
+      }
+      refreshGuide();
+    }
+
+    for (let index = 0; index < 4; index += 1) {
+      const target = document.getElementById(`target${index}`);
+
+      target.addEventListener("targetFound", () => {
+        visibleTargets.add(index);
+        setActiveFromVisible();
+      });
+
+      target.addEventListener("targetLost", () => {
+        visibleTargets.delete(index);
+        setActiveFromVisible();
+      });
+    }
 
     confirmButton.addEventListener("click", () => {
-      if (!targetVisible || completed) return;
+      if (completed || activeIndex !== 3) return;
 
       completed = true;
       localStorage.setItem("d-center-ar-success", "true");
+
       walkGuide.classList.remove("is-visible");
+      confirmButton.classList.remove("is-visible");
 
       if (navigator.vibrate) {
         navigator.vibrate([60, 40, 90]);
