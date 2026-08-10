@@ -1,16 +1,18 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV6";
+const STORAGE_KEY = "arEnnichiKitanProgressV8";
 
 const questions = [
   {
-    type: "quiz",
-    destination: "D館へ向かえ",
-    story: "最初の祭札は、高くそびえる建物の記憶に隠されている。",
-    question: "D館は何階建て？",
-    choices: ["6階建て", "7階建て", "8階建て", "9階建て"],
-    answerIndex: 2,
+    type: "ar",
+    destination: "D館の入口へ向かえ",
+    story: "最初の祭札は、D-Centerの看板に残された記憶の中に眠っている。",
+    question: "D館入口の「D-Center」をカメラに写してください。",
     letter: "ず",
-    image: "",
-    imageAlt: "D館の現地写真"
+    image: "./assets/images/d-center.jpg",
+    imageAlt: "D-Centerの看板",
+    arPage: "./d-center-ar.html?v=1",
+    arFlag: "d-center-ar-success",
+    launchLabel: "D館ARを起動する",
+    help: "D-Centerの看板全体と、周囲の柱やレンガが少し入るように写してください。"
   },
   {
     type: "ar",
@@ -20,7 +22,7 @@ const questions = [
     letter: "い",
     image: "./assets/images/b-center.jpg",
     imageAlt: "B-Centerの看板",
-    arPage: "./b-center-ar.html?v=2",
+    arPage: "./b-center-ar.html?v=3",
     arFlag: "b-center-ar-success",
     launchLabel: "B館ARを起動する",
     help: "看板を画面に入れたまま模型を左右にスワイプし、「きおく」と読める角度を探してください。"
@@ -190,20 +192,16 @@ function verifyArStage(current) {
 
 function checkAnswer(selectedIndex) {
   const current = questions[state.step];
-  const buttons = [...choices.querySelectorAll("button")];
 
   if (selectedIndex !== current.answerIndex) {
     feedback.textContent = "違うようだ。現地をもう一度、よく確かめてみよう。";
     return;
   }
 
-  buttons.forEach(button => {
-    button.disabled = true;
-  });
-
   if (!state.letters.includes(current.letter)) {
     state.letters.push(current.letter);
   }
+
   saveState();
   renderReward(current);
 }
@@ -266,6 +264,7 @@ function resetGame() {
 
   state = defaultState();
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("d-center-ar-success");
   localStorage.removeItem("b-center-ar-success");
   localStorage.removeItem("g-object-ar-success");
   localStorage.removeItem("c-center-ar-success");
