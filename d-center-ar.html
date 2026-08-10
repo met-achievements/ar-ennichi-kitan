@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>D館AR | 最初の祭札</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <style>
+    html,
+    body.ar-page {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: transparent !important;
+    }
+
+    body.ar-page::after { display: none !important; }
+
+    body.ar-page > video {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: -2 !important;
+    }
+
+    body.ar-page .a-canvas {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: -1 !important;
+    }
+
+    .d-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(8, 10, 18, .45);
+      backdrop-filter: blur(4px);
+    }
+
+    .d-overlay.is-visible { display: grid; }
+
+    .d-card {
+      width: min(100%, 420px);
+      padding: 24px 20px;
+      color: #281e29;
+      background: rgba(246, 237, 218, .97);
+      border-radius: 18px;
+      text-align: center;
+    }
+
+    .festival-ticket {
+      display: grid;
+      width: 126px;
+      height: 166px;
+      margin: 0 auto 18px;
+      place-items: center;
+      color: #f8e5a8;
+      background: #7e222b;
+      border: 4px double #d7a84a;
+      border-radius: 9px;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 4.7rem;
+    }
+
+    .d-card h2 { margin: 0 0 10px; }
+    .d-card p { margin: 0 0 16px; }
+
+    .d-card a {
+      display: block;
+      width: 100%;
+      padding: 14px 16px;
+      color: #fff8e8;
+      background: linear-gradient(180deg, #aa3b41, #7e222b);
+      border: 1px solid #681a22;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+  </style>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+
+<body class="ar-page">
+  <div class="ar-hud">
+    <div class="ar-card">
+      <h1>最初の祭札を探せ</h1>
+      <p>
+        D館入口の「D-Center」をカメラに写してください。
+        看板全体と、その周囲が少し入るようにすると認識しやすいです。
+      </p>
+    </div>
+  </div>
+
+  <div class="ar-tip" id="arTip">D-Centerをカメラに映してください…</div>
+
+  <div class="d-overlay" id="resultOverlay" aria-live="polite">
+    <div class="d-card">
+      <div class="festival-ticket" aria-label="祭札 ず">ず</div>
+      <h2>最初の祭札を発見した！</h2>
+      <p>祭札「ず」を取り戻した。次の記憶を探しに行こう。</p>
+      <a href="./index.html?v=8">本編に戻る</a>
+    </div>
+  </div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets/d-center.mind; autoStart: true; maxTrack: 1; uiScanning: true; uiLoading: true;"
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights; alpha: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity id="target" mindar-image-target="targetIndex: 0">
+      <a-plane
+        color="#7e222b"
+        opacity="0.88"
+        position="0 0.18 0.03"
+        height="0.55"
+        width="0.42">
+      </a-plane>
+
+      <a-text
+        value="ず"
+        align="center"
+        color="#f8e5a8"
+        position="0 0.18 0.04"
+        scale="2.4 2.4 2.4">
+      </a-text>
+
+      <a-ring
+        color="#d7a84a"
+        radius-inner="0.28"
+        radius-outer="0.31"
+        position="0 -0.2 0.04">
+      </a-ring>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const target = document.getElementById("target");
+    const resultOverlay = document.getElementById("resultOverlay");
+    const arTip = document.getElementById("arTip");
+    let found = false;
+
+    target.addEventListener("targetFound", () => {
+      if (found) return;
+      found = true;
+
+      localStorage.setItem("d-center-ar-success", "true");
+      arTip.style.display = "none";
+
+      if (navigator.vibrate) navigator.vibrate([60, 40, 90]);
+
+      // 祭札が看板上に浮かぶ瞬間を少し見せてから結果画面
+      window.setTimeout(() => {
+        resultOverlay.classList.add("is-visible");
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
