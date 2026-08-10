@@ -1,0 +1,1 @@
+MindAR Compilerで「01_MindARに入れる5枚」の5枚を 0→4 の順にまとめてコンパイルし、ダウンロードされた targets.mind を d-center.mind に名前変更して、このフォルダへ入れてください。

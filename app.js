@@ -1,4 +1,4 @@
-const STORAGE_KEY = "arEnnichiKitanProgressV12";
+const STORAGE_KEY = "arEnnichiKitanProgressV13";
 
 const questions = [
   {
@@ -9,7 +9,7 @@ const questions = [
     letter: "ず",
     image: "./assets/images/d-center.jpg",
     imageAlt: "D-Centerの看板",
-    arPage: "./d-center-ar.html?v=12",
+    arPage: "./d-center-ar.html?v=13",
     arFlag: "d-center-ar-success",
     launchLabel: "D館ARを起動する",
     help: "D-Centerをなるべく画面に残したまま、階段とは反対側へゆっくり回り込んでください。"
@@ -141,37 +141,26 @@ function renderQuestion() {
     stageImage.removeAttribute("src");
   }
 
-  if (current.type === "quiz") {
-    current.choices.forEach((choice, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "choice-button";
-      button.textContent = choice;
-      button.addEventListener("click", () => checkAnswer(index));
-      choices.appendChild(button);
-    });
-  } else {
-    const launch = document.createElement("a");
-    launch.className = "primary-button inline-link-button";
-    launch.href = current.arPage;
-    launch.textContent = current.launchLabel || "ARを起動する";
-    launch.target = "_blank";
-    launch.rel = "noopener noreferrer";
+  const launch = document.createElement("a");
+  launch.className = "primary-button inline-link-button";
+  launch.href = current.arPage;
+  launch.textContent = current.launchLabel || "ARを起動する";
+  launch.target = "_blank";
+  launch.rel = "noopener noreferrer";
 
-    const verify = document.createElement("button");
-    verify.type = "button";
-    verify.className = "secondary-button verify-button";
-    verify.textContent = "祭札を発見したらここを押す";
-    verify.addEventListener("click", () => verifyArStage(current));
+  const verify = document.createElement("button");
+  verify.type = "button";
+  verify.className = "secondary-button verify-button";
+  verify.textContent = "祭札を発見したらここを押す";
+  verify.addEventListener("click", () => verifyArStage(current));
 
-    const help = document.createElement("p");
-    help.className = "small-note left-note";
-    help.textContent = current.help || "対象を画面の中央に入れてください。";
+  const help = document.createElement("p");
+  help.className = "small-note left-note";
+  help.textContent = current.help || "対象を画面の中央に入れてください。";
 
-    choices.appendChild(launch);
-    choices.appendChild(verify);
-    choices.appendChild(help);
-  }
+  choices.appendChild(launch);
+  choices.appendChild(verify);
+  choices.appendChild(help);
 
   showScreen("question");
   renderProgress();
@@ -180,22 +169,6 @@ function renderQuestion() {
 function verifyArStage(current) {
   if (localStorage.getItem(current.arFlag) !== "true") {
     feedback.textContent = "まだ祭札が見つかっていないようだ。ARページで謎を解いてみよう。";
-    return;
-  }
-
-  if (!state.letters.includes(current.letter)) {
-    state.letters.push(current.letter);
-  }
-
-  saveState();
-  renderReward(current);
-}
-
-function checkAnswer(selectedIndex) {
-  const current = questions[state.step];
-
-  if (selectedIndex !== current.answerIndex) {
-    feedback.textContent = "違うようだ。現地をもう一度、よく確かめてみよう。";
     return;
   }
 

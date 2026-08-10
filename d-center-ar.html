@@ -17,9 +17,7 @@
       overscroll-behavior: none;
     }
 
-    body.ar-page::after {
-      display: none !important;
-    }
+    body.ar-page::after { display: none !important; }
 
     body.ar-page > video {
       position: fixed !important;
@@ -44,7 +42,7 @@
       display: none;
       width: min(calc(100% - 24px), 440px);
       transform: translateX(-50%);
-      padding: 15px 16px;
+      padding: 14px 15px;
       color: #fff8e8;
       background: rgba(10, 12, 22, .84);
       border-radius: 15px;
@@ -56,20 +54,20 @@
 
     .walk-guide strong {
       display: block;
-      margin-bottom: 6px;
-      font-size: 1.05rem;
+      margin-bottom: 5px;
+      font-size: 1.02rem;
     }
 
     .walk-guide p {
       margin: 0;
-      line-height: 1.65;
-      font-size: .92rem;
+      line-height: 1.55;
+      font-size: .9rem;
     }
 
     .confirm-button {
       display: none;
       width: 100%;
-      margin-top: 12px;
+      margin-top: 11px;
       padding: 13px 16px;
       color: #fff8e8;
       background: linear-gradient(180deg, #aa3b41, #7e222b);
@@ -105,8 +103,8 @@
 
     .festival-ticket {
       display: grid;
-      width: 126px;
-      height: 166px;
+      width: 112px;
+      height: 150px;
       margin: 0 auto 17px;
       place-items: center;
       color: #f8e5a8;
@@ -114,15 +112,11 @@
       border: 4px double #d7a84a;
       border-radius: 9px;
       font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-      font-size: 4.7rem;
+      font-size: 4.2rem;
     }
 
     .result-card h2 { margin: 0 0 10px; }
-
-    .result-card p {
-      margin: 0 0 16px;
-      line-height: 1.7;
-    }
+    .result-card p { margin: 0 0 16px; line-height: 1.7; }
 
     .result-card a {
       display: block;
@@ -158,9 +152,7 @@
 
   <script>
     AFRAME.registerComponent("fit-kioku-model", {
-      schema: {
-        size: { type: "number", default: 0.78 }
-      },
+      schema: { size: { type: "number", default: 0.52 } },
 
       init() {
         this.el.addEventListener("model-loaded", () => {
@@ -201,12 +193,8 @@
 
   <div class="walk-guide" id="walkGuide">
     <strong id="guideTitle">そのまま、ゆっくり横へ</strong>
-    <p id="guideText">
-      D-Centerを画面から外さないようにして、少しずつ回り込んでください。
-    </p>
-    <button class="confirm-button" id="confirmButton" type="button">
-      「きおく」と読めた！
-    </button>
+    <p id="guideText">D-Centerを画面から外さないようにして、少しずつ回り込んでください。</p>
+    <button class="confirm-button" id="confirmButton" type="button">「きおく」と読めた！</button>
   </div>
 
   <div class="debug-box" id="debugBox">target: -</div>
@@ -215,11 +203,8 @@
     <div class="result-card">
       <div class="festival-ticket" aria-label="祭札 ず">ず</div>
       <h2>最初の祭札を発見した！</h2>
-      <p>
-        「きおく」の形を見つけ、第一の記憶がよみがえった。
-        祭札「ず」を取り戻した。
-      </p>
-      <a href="./index.html?v=12">本編に戻る</a>
+      <p>「きおく」の形を見つけ、第一の記憶がよみがえった。祭札「ず」を取り戻した。</p>
+      <a href="./index.html?v=13">本編に戻る</a>
     </div>
   </div>
 
@@ -229,9 +214,9 @@
       autoStart: true;
       maxTrack: 1;
       warmupTolerance: 1;
-      missTolerance: 10;
+      missTolerance: 18;
       filterMinCF: 0.001;
-      filterBeta: 0.01;
+      filterBeta: 1000;
       uiScanning: true;
       uiLoading: true;
     "
@@ -247,70 +232,52 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!--
-      d-center.mind は「正面 → 浅い斜め → 中間 → 深い斜め」
-      の順で4枚コンパイルした前提。
-
-      各ターゲットは別画像として追跡されるため、
-      写真の撮影角度に合わせてモデルのY回転を補正している。
-      深い斜め（targetIndex 3）で、kioku.glb が約50°の読みやすい見え方になる。
-    -->
-
-    <!-- 正面 -->
+    <!-- 5 target images: front -> deepest -->
     <a-entity id="target0" mindar-image-target="targetIndex: 0">
-      <a-entity position="0 0.05 0.24">
-        <a-entity
-          gltf-model="#kiokuAsset"
-          fit-kioku-model="size: 0.78"
-          rotation="0 100 0">
-        </a-entity>
+      <a-entity position="0 0.04 0.20">
+        <a-entity gltf-model="#kiokuAsset" fit-kioku-model="size: 0.52" rotation="0 100 0"></a-entity>
       </a-entity>
       <a-entity light="type: ambient; intensity: 1.35"></a-entity>
       <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
     </a-entity>
 
-    <!-- 浅い斜め：約18° -->
     <a-entity id="target1" mindar-image-target="targetIndex: 1">
-      <a-entity position="0.01 0.05 0.24">
-        <a-entity
-          gltf-model="#kiokuAsset"
-          fit-kioku-model="size: 0.78"
-          rotation="0 82 0">
-        </a-entity>
+      <a-entity position="0.01 0.04 0.20">
+        <a-entity gltf-model="#kiokuAsset" fit-kioku-model="size: 0.52" rotation="0 88 0"></a-entity>
       </a-entity>
       <a-entity light="type: ambient; intensity: 1.35"></a-entity>
       <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
     </a-entity>
 
-    <!-- 中間：約35° -->
     <a-entity id="target2" mindar-image-target="targetIndex: 2">
-      <a-entity position="0.02 0.05 0.24">
-        <a-entity
-          gltf-model="#kiokuAsset"
-          fit-kioku-model="size: 0.78"
-          rotation="0 65 0">
-        </a-entity>
+      <a-entity position="0.02 0.04 0.20">
+        <a-entity gltf-model="#kiokuAsset" fit-kioku-model="size: 0.52" rotation="0 75 0"></a-entity>
       </a-entity>
       <a-entity light="type: ambient; intensity: 1.35"></a-entity>
       <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
     </a-entity>
 
-    <!-- 深い斜め：約50°。「きおく」が読めるゴール位置 -->
     <a-entity id="target3" mindar-image-target="targetIndex: 3">
-      <a-entity position="0.03 0.05 0.24">
-        <a-entity
-          gltf-model="#kiokuAsset"
-          fit-kioku-model="size: 0.78"
-          rotation="0 50 0">
-        </a-entity>
+      <a-entity position="0.03 0.04 0.20">
+        <a-entity gltf-model="#kiokuAsset" fit-kioku-model="size: 0.52" rotation="0 62 0"></a-entity>
       </a-entity>
+      <a-entity light="type: ambient; intensity: 1.35"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
+    </a-entity>
+
+    <a-entity id="target4" mindar-image-target="targetIndex: 4">
+      <a-entity position="0.04 0.04 0.20">
+        <a-entity gltf-model="#kiokuAsset" fit-kioku-model="size: 0.52" rotation="0 50 0"></a-entity>
+      </a-entity>
+
       <a-ring
         color="#d7a84a"
-        radius-inner="0.34"
-        radius-outer="0.37"
-        position="0 -0.12 0.03"
+        radius-inner="0.24"
+        radius-outer="0.27"
+        position="0 -0.09 0.03"
         opacity="0.8">
       </a-ring>
+
       <a-entity light="type: ambient; intensity: 1.35"></a-entity>
       <a-entity light="type: directional; intensity: 1.15" position="-1 2 2"></a-entity>
     </a-entity>
@@ -327,32 +294,18 @@
 
     const params = new URLSearchParams(location.search);
     const debugMode = params.get("debug") === "1";
-
-    if (debugMode) {
-      debugBox.classList.add("is-visible");
-    }
+    if (debugMode) debugBox.classList.add("is-visible");
 
     const visibleTargets = new Set();
     let activeIndex = -1;
     let completed = localStorage.getItem("d-center-ar-success") === "true";
 
     const guideByIndex = [
-      {
-        title: "模型が現れた",
-        text: "D-Centerを画面に残したまま、階段とは反対側へゆっくり移動してください。"
-      },
-      {
-        title: "その調子。もう少し横へ",
-        text: "模型の文字が少しずつ重なって見えてきます。急がずゆっくり進もう。"
-      },
-      {
-        title: "かなり近い",
-        text: "あと少しだけ回り込んで、文字がひとつの言葉になる場所を探してください。"
-      },
-      {
-        title: "形が重なった",
-        text: "何と読める？ 完成した模型をよく確認してください。"
-      }
+      ["模型が現れた", "D-Centerを画面に残したまま、階段とは反対側へゆっくり移動してください。"],
+      ["その調子", "少しずつ横へ。模型の文字の重なり方を見てください。"],
+      ["半分くらい", "急がず、そのままもう少しだけ回り込もう。"],
+      ["かなり近い", "文字がひとつの言葉になる場所を探してください。"],
+      ["形が重なった", "何と読める？ 完成した模型をよく確認してください。"]
     ];
 
     function refreshGuide() {
@@ -369,11 +322,11 @@
       arTip.style.display = "none";
       walkGuide.classList.add("is-visible");
 
-      const guide = guideByIndex[activeIndex] || guideByIndex[0];
-      guideTitle.textContent = guide.title;
-      guideText.textContent = guide.text;
+      const [title, text] = guideByIndex[activeIndex] || guideByIndex[0];
+      guideTitle.textContent = title;
+      guideText.textContent = text;
 
-      if (activeIndex === 3) {
+      if (activeIndex === 4) {
         confirmButton.classList.add("is-visible");
       } else {
         confirmButton.classList.remove("is-visible");
@@ -383,16 +336,11 @@
     }
 
     function setActiveFromVisible() {
-      if (visibleTargets.size === 0) {
-        activeIndex = -1;
-      } else {
-        // 回り込み方向に進んだ時、より深い角度のターゲットを優先。
-        activeIndex = Math.max(...visibleTargets);
-      }
+      activeIndex = visibleTargets.size ? Math.max(...visibleTargets) : -1;
       refreshGuide();
     }
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       const target = document.getElementById(`target${index}`);
 
       target.addEventListener("targetFound", () => {
@@ -407,18 +355,13 @@
     }
 
     confirmButton.addEventListener("click", () => {
-      if (completed || activeIndex !== 3) return;
+      if (completed || activeIndex !== 4) return;
 
       completed = true;
       localStorage.setItem("d-center-ar-success", "true");
-
       walkGuide.classList.remove("is-visible");
-      confirmButton.classList.remove("is-visible");
 
-      if (navigator.vibrate) {
-        navigator.vibrate([60, 40, 90]);
-      }
-
+      if (navigator.vibrate) navigator.vibrate([60, 40, 90]);
       resultOverlay.classList.add("is-visible");
     });
   </script>
